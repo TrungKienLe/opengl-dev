@@ -1,22 +1,28 @@
 /* OpenGL dev - code
  *
  * Author: KienLTb
+ * build command:
+ *   g++ -o 01_skeleton  01_skeleton.cpp Program.cpp Shader.cpp -lGL -lglfw -lGLEW
  */
 
- #include <GL/glew.h>
- #include <GLFW/glfw3.h>
+#include "Program.h"
 
- #include <iostream>
- #include <string>
- #include <vector>
- #include <stdexcept>
- #include <cstdlib> // EXIT_FAILURE, EXIT_SUCCESS
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <stdexcept>
+#include <cstdlib> // EXIT_FAILURE, EXIT_SUCCESS
 
 
 // globals
 GLFWwindow* gWindow = NULL;
 GLuint gVAO = 0;
 GLuint gVBO = 0;
+
+krogl::Program* gProgram = NULL;
 
 // shader source code
 std::string vertex_source =
@@ -34,50 +40,12 @@ std::string fragment_source =
     "    finalColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
     "}\n";
 
-/* Check shader compiler errors - throw exception if fail*/
- void check_shader_compile_status(GLuint obj){
-    GLint status;
-    glGetShaderiv(obj, GL_COMPILE_STATUS, &status);
-    if (status == GL_FALSE) {
-        std::string msg("Compile failure in shader:\n");
-
-        GLint infoLogLength;
-        glGetShaderiv(obj, GL_INFO_LOG_LENGTH, &infoLogLength);
-        char* strInfoLog = new char[infoLogLength + 1];
-        glGetShaderInfoLog(obj, infoLogLength, NULL, strInfoLog);
-        msg += strInfoLog;
-        delete[] strInfoLog;
-
-        glDeleteShader(obj); obj = 0;
-        throw std::runtime_error(msg);
-    }
- }
-
-/* Check and displa for shader linker error - throw exception if fail*/
-void check_program_link_status(GLuint obj){
-    GLint status;
-    glGetProgramiv(obj, GL_LINK_STATUS, &status);
-    if (status == GL_FALSE) {
-        std::string msg("Program linking failure: ");
-
-        GLint infoLogLength;
-        glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &infoLogLength);
-        char* strInfoLog = new char[infoLogLength + 1];
-        glGetProgramInfoLog(obj, infoLogLength, NULL, strInfoLog);
-        msg += strInfoLog;
-        delete[] strInfoLog;
-
-        glDeleteProgram(obj); obj = 0;
-        throw std::runtime_error(msg);
-    }
-}
-
 void OnError(int errorCode, const char* msg)
 {
     throw std::runtime_error(msg);
 }
 
-void SetupWindow(int width, int hight)
+void CreateWindow(int width, int hight)
 {
     // Initialse GLFW
     glfwSetErrorCallback(OnError);
@@ -94,7 +62,10 @@ void SetupWindow(int width, int hight)
     gWindow = glfwCreateWindow(width, hight, "OpenGL test", NULL, NULL);
     if(!gWindow)
         throw std::runtime_error("glfwCreateWindow failed. Can your hardware handle OpenGL 3.2?");
+}
 
+void InitGlfw()
+{
     // GLFW settings
     glfwMakeContextCurrent(gWindow);
 
@@ -114,53 +85,28 @@ void SetupWindow(int width, int hight)
         throw std::runtime_error("OpenGL 3.2 API is not available");
 }
 
-GLuint shader_program;
 
 void LoadShader()
 {
-    const char *source;
-    int length;
+     std::vector<krogl::Shader> Shaders;
+     Shaders.push_back(krogl::Shader(vertex_source, GL_VERTEX_SHADER));
+     Shaders.push_back(krogl::Shader(fragment_source, GL_FRAGMENT_SHADER));
 
-    /* Create and compiler vertex shader*/
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    source = vertex_source.c_str();
-    length = vertex_source.size();
-    glShaderSource(vertex_shader, 1, &source, &length);
-    glCompileShader(vertex_shader);
-    check_shader_compile_status(vertex_shader);
-
-
-    /* Create and compile fragment shader*/
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    source = fragment_source.c_str();
-    length = fragment_source.size();
-    glShaderSource(fragment_shader, 1, &source, &length);
-    glCompileShader(fragment_shader);
-    check_shader_compile_status(fragment_shader);
-
-    /* Create program*/
-    shader_program = glCreateProgram();
-
-    /* Attach shaders */
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-
-    /* Link the program and check error*/
-    glLinkProgram(shader_program);
-    check_program_link_status(shader_program);
+     /* Linked shader*/
+     gProgram = new krogl::Program(Shaders);
 }
 
 void LoadTriangle()
 {
-    /*Make and bind the VAO*/
+    // make and bind the VAO
     glGenVertexArrays(1, &gVAO);
     glBindVertexArray(gVAO);
 
-    /* Make and bind VBO*/
+    // make and bind the VBO
     glGenBuffers(1, &gVBO);
     glBindBuffer(GL_ARRAY_BUFFER, gVBO);
 
-    /* Put the three triangle vertices in to VBO*/
+    // Put the three triangle verticies into the VBO
     GLfloat vertexData[] = {
         //  X     Y     Z
          0.0f, 0.8f, 0.0f,
@@ -170,10 +116,9 @@ void LoadTriangle()
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
 
-    /* Connect the xyz to the "vert" attribute of the vertex shader */
-    // set up generic attrib pointers
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    // connect the xyz to the "vert" attribute of the vertex shader
+    glEnableVertexAttribArray(gProgram->attrib("vert"));
+    glVertexAttribPointer(gProgram->attrib("vert"), 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
     // unbind the VBO and VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -188,7 +133,7 @@ void Render()
     glClear(GL_COLOR_BUFFER_BIT);
 
     // bind the program (the shaders)
-    glUseProgram(shader_program);
+    glUseProgram(gProgram->object());
 
     // bind the VAO (the triangle)
     glBindVertexArray(gVAO);
@@ -209,10 +154,11 @@ void Render()
 
 int AppMain()
 {
-    int width = 800;
-    int hight = 600;
+    /* Create a window*/
+    CreateWindow(800, 600);
 
-    SetupWindow(width, hight);
+    /* Init and check verison of GLFW lib */
+    InitGlfw();
 
     /* Load and compile shader */
     LoadShader();
