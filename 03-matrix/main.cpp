@@ -2,7 +2,8 @@
  *
  * Author: KienLTb
  * build command
- *    g++ -o 03_matrixs  main.cpp Program.cpp Shader.cpp Bitmap.cpp platform_linux.cpp Texture.cpp -lGL -lglfw -lGLEW -lGLM
+ *    g++ -o 03_matrix  main.cpp Program.cpp Shader.cpp Bitmap.cpp platform_linux.cpp Texture.cpp -lGL -lglfw -lGLEW -DGLM_FORCE_RADIANS
+
  *
  */
 
