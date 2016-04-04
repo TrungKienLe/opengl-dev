@@ -40,16 +40,14 @@ std::string fragment_source =
     "    finalColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
     "}\n";
 
-void OnError(int errorCode, const char* msg)
-{
+void OnError(int errorCode, const char* msg) {
     throw std::runtime_error(msg);
 }
 
-void CreateWindow(int width, int hight)
-{
+void CreateWindow(int width, int hight) {
     // Initialse GLFW
     glfwSetErrorCallback(OnError);
-    if(!glfwInit())
+    if (!glfwInit())
         throw std::runtime_error("glfwInit failed");
 
     // Open a window with GLFW
@@ -60,18 +58,17 @@ void CreateWindow(int width, int hight)
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     gWindow = glfwCreateWindow(width, hight, "OpenGL test", NULL, NULL);
-    if(!gWindow)
+    if (!gWindow)
         throw std::runtime_error("glfwCreateWindow failed. Can your hardware handle OpenGL 3.2?");
 }
 
-void InitGlfw()
-{
+void InitGlfw() {
     // GLFW settings
     glfwMakeContextCurrent(gWindow);
 
     // initialise GLEW
     glewExperimental = GL_TRUE; // Stops glew crashing on OSX
-    if(glewInit() != GLEW_OK)
+    if (glewInit() != GLEW_OK)
         throw std::runtime_error("glewInit failed");
 
     // Print out some info about the graphics drivers
@@ -81,23 +78,21 @@ void InitGlfw()
     std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
 
     // make sure OpenGL version 3.2 API is available
-    if(!GLEW_VERSION_3_2)
+    if (!GLEW_VERSION_3_2)
         throw std::runtime_error("OpenGL 3.2 API is not available");
 }
 
 
-void LoadShader()
-{
-     std::vector<krogl::Shader> Shaders;
-     Shaders.push_back(krogl::Shader(vertex_source, GL_VERTEX_SHADER));
-     Shaders.push_back(krogl::Shader(fragment_source, GL_FRAGMENT_SHADER));
+void LoadShader() {
+    std::vector<krogl::Shader> Shaders;
+    Shaders.push_back(krogl::Shader(vertex_source, GL_VERTEX_SHADER));
+    Shaders.push_back(krogl::Shader(fragment_source, GL_FRAGMENT_SHADER));
 
-     /* Linked shader*/
-     gProgram = new krogl::Program(Shaders);
+    /* Linked shader*/
+    gProgram = new krogl::Program(Shaders);
 }
 
-void LoadTriangle()
-{
+void LoadTriangle() {
     // make and bind the VAO
     glGenVertexArrays(1, &gVAO);
     glBindVertexArray(gVAO);
@@ -120,11 +115,11 @@ void LoadTriangle()
         //  X     Y     Z
         -0.8f, -0.8f, 0.0f,
         -0.8f,  0.8f, 0.0f,
-         0.8f,  0.8f, 0.0f,
+        0.8f,  0.8f, 0.0f,
 
-         0.8f,  0.8f, 0.0f,
-         0.8f, -0.8f, 0.0f,
-         -0.8f, -0.8f, 0.0f,
+        0.8f,  0.8f, 0.0f,
+        0.8f, -0.8f, 0.0f,
+        -0.8f, -0.8f, 0.0f,
 
     };
 
@@ -140,8 +135,7 @@ void LoadTriangle()
 }
 
 
-void Render()
-{
+void Render() {
     // clear everything
     glClearColor(0, 0, 0, 1); // black
     glClear(GL_COLOR_BUFFER_BIT);
@@ -156,7 +150,7 @@ void Render()
     // glDrawArrays(GL_TRIANGLES, 0, 3);
 
     /* Draw square */
-    glDrawArrays(GL_TRIANGLES, 0, 2*3);// Draw 2 triangles for draw square
+    glDrawArrays(GL_TRIANGLES, 0, 2 * 3); // Draw 2 triangles for draw square
 
     // unbind the VAO
     glBindVertexArray(0);
@@ -169,8 +163,7 @@ void Render()
 }
 
 
-int AppMain()
-{
+int AppMain() {
     /* Create a window*/
     CreateWindow(800, 600);
 
@@ -184,7 +177,7 @@ int AppMain()
     LoadTriangle();
 
     /* Run while the window is open*/
-    while(!glfwWindowShouldClose(gWindow)){
+    while (!glfwWindowShouldClose(gWindow)) {
         // process pending events
         glfwPollEvents();
 
@@ -198,11 +191,10 @@ int AppMain()
     return 0;
 }
 
-int main(int argc, char const *argv[])
-{
-    try{
+int main(int argc, char const *argv[]) {
+    try {
         AppMain();
-    }catch(const std::exception& e){
+    } catch (const std::exception& e) {
         std::cerr << "ERROR " << e.what() << std::endl;
         return EXIT_FAILURE;
     }

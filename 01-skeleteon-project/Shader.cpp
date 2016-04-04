@@ -11,11 +11,10 @@ using namespace krogl;
 
 Shader::Shader(const std::string& shaderSource, GLenum shaderType):
     _object(0),
-    _refCount(NULL)
-{
+    _refCount(NULL) {
     //Create the shader object
     _object = glCreateShader(shaderType);
-    if(_object == 0)
+    if (_object == 0)
         throw std::runtime_error("glCreateShader failed");
 
     //set the source code
@@ -49,8 +48,7 @@ Shader::Shader(const std::string& shaderSource, GLenum shaderType):
 
 Shader::Shader(const Shader& other) :
     _object(other._object),
-    _refCount(other._refCount)
-{
+    _refCount(other._refCount) {
     _retain();
 }
 
@@ -68,7 +66,7 @@ Shader& Shader::operator = (const Shader& other) {
 
 Shader::~Shader() {
     //_refCount will be NULL if constructor failed and threw an exception
-    if(_refCount) _release();
+    if (_refCount) _release();
 }
 
 void Shader::_retain() {
@@ -79,7 +77,7 @@ void Shader::_retain() {
 void Shader::_release() {
     assert(_refCount && *_refCount > 0);
     *_refCount -= 1;
-    if(*_refCount == 0){
+    if (*_refCount == 0) {
         glDeleteShader(_object); _object = 0;
         delete _refCount; _refCount = NULL;
     }
