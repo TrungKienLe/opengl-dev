@@ -107,11 +107,21 @@ void LoadTriangle()
     glBindBuffer(GL_ARRAY_BUFFER, gVBO);
 
     // Put the three triangle verticies into the VBO
+    // GLfloat vertexData[] = {
+    //     //  X     Y     Z
+    //      0.0f, 0.8f, 0.0f,
+    //     -0.8f,-0.8f, 0.0f,
+    //      0.8f,-0.8f, 0.0f,
+    // };
+
+    // Put the four square verticies into VBO
     GLfloat vertexData[] = {
         //  X     Y     Z
-         0.0f, 0.8f, 0.0f,
-        -0.8f,-0.8f, 0.0f,
-         0.8f,-0.8f, 0.0f,
+        -0.8f, -0.8f, 0.0f,
+        -0.8f,  0.8f, 0.0f,
+         0.8f,  0.8f, 0.0f,
+         0.8f,  -0.8f, 0.0f,
+
     };
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
@@ -139,7 +149,10 @@ void Render()
     glBindVertexArray(gVAO);
 
     // draw the VAO
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    /* Draw square */
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
 
     // unbind the VAO
     glBindVertexArray(0);
