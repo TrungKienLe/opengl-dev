@@ -115,12 +115,16 @@ void LoadTriangle()
     // };
 
     // Put the four square verticies into VBO
+    // Draw 2 triangles for draw square
     GLfloat vertexData[] = {
         //  X     Y     Z
         -0.8f, -0.8f, 0.0f,
         -0.8f,  0.8f, 0.0f,
          0.8f,  0.8f, 0.0f,
-         0.8f,  -0.8f, 0.0f,
+
+         0.8f,  0.8f, 0.0f,
+         0.8f, -0.8f, 0.0f,
+         -0.8f, -0.8f, 0.0f,
 
     };
 
@@ -152,7 +156,7 @@ void Render()
     // glDrawArrays(GL_TRIANGLES, 0, 3);
 
     /* Draw square */
-    glDrawArrays(GL_LINE_LOOP, 0, 4);
+    glDrawArrays(GL_TRIANGLES, 0, 2*3);// Draw 2 triangles for draw square
 
     // unbind the VAO
     glBindVertexArray(0);
