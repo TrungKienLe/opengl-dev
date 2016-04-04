@@ -1,11 +1,8 @@
 /* OpenGL dev - code
  *
  * Author: KienLTb
- * build command:
- *   g++ -o 01_skeleton  01_skeleton.cpp Program.cpp Shader.cpp -lGL -lglfw -lGLEW
- *
- *
- *    g++ -o 02_textures  main.cpp Program.cpp Shader.cpp Bitmap.cpp platform_linux.cpp Texture.cpp -lGL -lglfw -lGLEW
+ * build command
+ *    g++ -o 03_matrixs  main.cpp Program.cpp Shader.cpp Bitmap.cpp platform_linux.cpp Texture.cpp -lGL -lglfw -lGLEW -lGLM
  *
  */
 
@@ -15,12 +12,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 // standard C++ libraries
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
 #include <cmath>
+
 
 // tdogl classes
 #include "Program.h"
@@ -35,6 +34,7 @@ tdogl::Texture* gTexture = NULL;
 tdogl::Program* gProgram = NULL;
 GLuint gVAO = 0;
 GLuint gVBO = 0;
+GLfloat gDegreesRotated = 0.0f;
 
 
 // loads the vertex shader and fragment shader, and links them to make the global gProgram
@@ -43,11 +43,23 @@ static void LoadShaders() {
     shaders.push_back(tdogl::Shader::shaderFromFile(ResourcePath("vertex-shader.txt"), GL_VERTEX_SHADER));
     shaders.push_back(tdogl::Shader::shaderFromFile(ResourcePath("fragment-shader.txt"), GL_FRAGMENT_SHADER));
     gProgram = new tdogl::Program(shaders);
+
+    gProgram->use();
+
+    //set the "projection" uniform in the vertex shader, because it's not going to change
+    glm::mat4 projection = glm::perspective(glm::radians(50.0f), SCREEN_SIZE.x/SCREEN_SIZE.y, 0.1f, 10.0f);
+    gProgram->setUniform("projection", projection);
+
+    //set the "camera" uniform in the vertex shader, because it's also not going to change
+    glm::mat4 camera = glm::lookAt(glm::vec3(3,3,3), glm::vec3(0,0,0), glm::vec3(0,1,0));
+    gProgram->setUniform("camera", camera);
+
+    gProgram->stopUsing();
 }
 
 
-// loads a triangle into the VAO global
-static void LoadTriangle() {
+// loads a cube into the VAO and VBO globals: gVAO and gVBO
+static void LoadCube() {
     // make and bind the VAO
     glGenVertexArrays(1, &gVAO);
     glBindVertexArray(gVAO);
@@ -56,17 +68,56 @@ static void LoadTriangle() {
     glGenBuffers(1, &gVBO);
     glBindBuffer(GL_ARRAY_BUFFER, gVBO);
 
-    // Put the  2 * three triangle vertices (XYZ) and texture coordinates (UV) into the VBO
-    // Use 2 triangle to draw Square
+    // Make a cube out of triangles (two triangles per side)
     GLfloat vertexData[] = {
         //  X     Y     Z       U     V
-        -0.8f, -0.8f, 0.0f,   0.0f,  0.0f,
-        -0.8f,  0.8f, 0.0f,   0.0f,  1.0f,
-         0.8f,  0.8f, 0.0f,   1.0f,  1.0f,
+        // bottom
+        -1.0f,-1.0f,-1.0f,   0.0f, 0.0f,
+         1.0f,-1.0f,-1.0f,   1.0f, 0.0f,
+        -1.0f,-1.0f, 1.0f,   0.0f, 1.0f,
+         1.0f,-1.0f,-1.0f,   1.0f, 0.0f,
+         1.0f,-1.0f, 1.0f,   1.0f, 1.0f,
+        -1.0f,-1.0f, 1.0f,   0.0f, 1.0f,
 
-         0.8f,  0.8f, 0.0f,   1.0f,  1.0f,
-         0.8f, -0.8f, 0.0f,   1.0f,  0.0f,
-         -0.8f, -0.8f, 0.0f,   0.0f,  0.0f,
+        // top
+        -1.0f, 1.0f,-1.0f,   0.0f, 0.0f,
+        -1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+         1.0f, 1.0f,-1.0f,   1.0f, 0.0f,
+         1.0f, 1.0f,-1.0f,   1.0f, 0.0f,
+        -1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+         1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+
+        // front
+        -1.0f,-1.0f, 1.0f,   1.0f, 0.0f,
+         1.0f,-1.0f, 1.0f,   0.0f, 0.0f,
+        -1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+         1.0f,-1.0f, 1.0f,   0.0f, 0.0f,
+         1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+
+        // back
+        -1.0f,-1.0f,-1.0f,   0.0f, 0.0f,
+        -1.0f, 1.0f,-1.0f,   0.0f, 1.0f,
+         1.0f,-1.0f,-1.0f,   1.0f, 0.0f,
+         1.0f,-1.0f,-1.0f,   1.0f, 0.0f,
+        -1.0f, 1.0f,-1.0f,   0.0f, 1.0f,
+         1.0f, 1.0f,-1.0f,   1.0f, 1.0f,
+
+        // left
+        -1.0f,-1.0f, 1.0f,   0.0f, 1.0f,
+        -1.0f, 1.0f,-1.0f,   1.0f, 0.0f,
+        -1.0f,-1.0f,-1.0f,   0.0f, 0.0f,
+        -1.0f,-1.0f, 1.0f,   0.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+        -1.0f, 1.0f,-1.0f,   1.0f, 0.0f,
+
+        // right
+         1.0f,-1.0f, 1.0f,   1.0f, 1.0f,
+         1.0f,-1.0f,-1.0f,   1.0f, 0.0f,
+         1.0f, 1.0f,-1.0f,   0.0f, 0.0f,
+         1.0f,-1.0f, 1.0f,   1.0f, 1.0f,
+         1.0f, 1.0f,-1.0f,   0.0f, 0.0f,
+         1.0f, 1.0f, 1.0f,   0.0f, 1.0f
     };
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
 
@@ -83,7 +134,7 @@ static void LoadTriangle() {
 }
 
 
-// loads the file "hazard.png" into gTexture
+// loads the file "wooden-crate.jpg" into gTexture
 static void LoadTexture() {
     tdogl::Bitmap bmp = tdogl::Bitmap::bitmapFromFile(ResourcePath("wooden-crate.jpg"));
     bmp.flipVertically();
@@ -95,10 +146,13 @@ static void LoadTexture() {
 static void Render() {
     // clear everything
     glClearColor(0, 0, 0, 1); // black
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // bind the program (the shaders)
     gProgram->use();
+
+    // set the "model" uniform in the vertex shader, based on the gDegreesRotated global
+    gProgram->setUniform("model", glm::rotate(glm::mat4(), glm::radians(gDegreesRotated), glm::vec3(0,1,0)));
 
     // bind the texture and set the "tex" uniform in the fragment shader
     glActiveTexture(GL_TEXTURE0);
@@ -109,8 +163,7 @@ static void Render() {
     glBindVertexArray(gVAO);
 
     // draw the VAO
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDrawArrays(GL_TRIANGLES, 0, 2*3);
+    glDrawArrays(GL_TRIANGLES, 0, 6*2*3);
 
     // unbind the VAO, the program and the texture
     glBindVertexArray(0);
@@ -119,6 +172,14 @@ static void Render() {
 
     // swap the display buffers (displays what was just drawn)
     glfwSwapBuffers(gWindow);
+}
+
+
+// update the scene based on the time elapsed since last update
+void Update(float secondsElapsed) {
+    const GLfloat degreesPerSecond = 180.0f;
+    gDegreesRotated += secondsElapsed * degreesPerSecond;
+    while(gDegreesRotated > 360.0f) gDegreesRotated -= 360.0f;
 }
 
 void OnError(int errorCode, const char* msg) {
@@ -150,6 +211,9 @@ void AppMain() {
     if(glewInit() != GLEW_OK)
         throw std::runtime_error("glewInit failed");
 
+    // GLEW throws some errors, so discard all the errors so far
+    while(glGetError() != GL_NO_ERROR) {}
+
     // print out some info about the graphics drivers
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
     std::cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
@@ -161,6 +225,8 @@ void AppMain() {
         throw std::runtime_error("OpenGL 3.2 API is not available.");
 
     // OpenGL settings
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -171,15 +237,26 @@ void AppMain() {
     LoadTexture();
 
     // create buffer and fill it with the points of the triangle
-    LoadTriangle();
+    LoadCube();
 
     // run while the window is open
+    double lastTime = glfwGetTime();
     while(!glfwWindowShouldClose(gWindow)){
         // process pending events
         glfwPollEvents();
 
+        // update the scene based on the time elapsed since last update
+        double thisTime = glfwGetTime();
+        Update((float)(thisTime - lastTime));
+        lastTime = thisTime;
+
         // draw one frame
         Render();
+
+        // check for errors
+        GLenum error = glGetError();
+        if(error != GL_NO_ERROR)
+            std::cerr << "OpenGL Error " << error << std::endl;
     }
 
     // clean up and exit
