@@ -36,7 +36,6 @@ GLuint gVAO = 0;
 GLuint gVBO = 0;
 GLfloat gDegreesRotated = 0.0f;
 
-
 // loads the vertex shader and fragment shader, and links them to make the global gProgram
 static void LoadShaders() {
     std::vector<tdogl::Shader> shaders;
@@ -56,7 +55,6 @@ static void LoadShaders() {
 
     gProgram->stopUsing();
 }
-
 
 // loads a cube into the VAO and VBO globals: gVAO and gVBO
 static void LoadCube() {
@@ -133,14 +131,12 @@ static void LoadCube() {
     glBindVertexArray(0);
 }
 
-
 // loads the file "wooden-crate.jpg" into gTexture
 static void LoadTexture() {
     tdogl::Bitmap bmp = tdogl::Bitmap::bitmapFromFile(ResourcePath("wooden-crate.jpg"));
     bmp.flipVertically();
     gTexture = new tdogl::Texture(bmp);
 }
-
 
 // draws a single frame
 static void Render() {
@@ -173,7 +169,6 @@ static void Render() {
     // swap the display buffers (displays what was just drawn)
     glfwSwapBuffers(gWindow);
 }
-
 
 // update the scene based on the time elapsed since last update
 void Update(float secondsElapsed) {

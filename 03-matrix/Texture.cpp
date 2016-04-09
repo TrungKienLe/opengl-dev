@@ -1,14 +1,14 @@
 /*
  tdogl::Texture
- 
+
  Copyright 2012 Thomas Dalling - http://tomdalling.com/
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,13 +43,13 @@ Texture::Texture(const Bitmap& bitmap, GLint minMagFiler, GLint wrapMode) :
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
     glTexImage2D(GL_TEXTURE_2D,
-                 0, 
+                 0,
                  TextureFormatForBitmapFormat(bitmap.format()),
-                 (GLsizei)bitmap.width(), 
+                 (GLsizei)bitmap.width(),
                  (GLsizei)bitmap.height(),
-                 0, 
-                 TextureFormatForBitmapFormat(bitmap.format()), 
-                 GL_UNSIGNED_BYTE, 
+                 0,
+                 TextureFormatForBitmapFormat(bitmap.format()),
+                 GL_UNSIGNED_BYTE,
                  bitmap.pixelBuffer());
     glBindTexture(GL_TEXTURE_2D, 0);
 }
